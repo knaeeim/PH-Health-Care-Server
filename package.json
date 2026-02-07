@@ -4,7 +4,10 @@
     "description": "",
     "main": "index.js",
     "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1"
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "start": "node dist/server.js",
+        "build": "tsc",
+        "dev": "tsx watch src/server.ts"
     },
     "repository": {
         "type": "git",
@@ -19,8 +22,16 @@
     },
     "homepage": "https://github.com/knaeeim/PH-Health-Care-Server#readme",
     "devDependencies": {
+        "@eslint/js": "^9.20.0",
         "@types/express": "^5.0.6",
         "@types/node": "^25.2.1",
-        "typescript": "^5.9.3"
+        "eslint": "^9.20.0",
+        "typescript": "^5.9.3",
+        "typescript-eslint": "^8.24.0"
+    },
+    "dependencies": {
+        "dotenv": "^17.2.4",
+        "express": "^5.2.1",
+        "tsx": "^4.21.0"
     }
 }
