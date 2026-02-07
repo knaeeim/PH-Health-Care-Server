@@ -7,6 +7,8 @@
         "test": "echo \"Error: no test specified\" && exit 1",
         "start": "node dist/server.js",
         "build": "tsc",
+        "lint": "eslint \"src/**/*.ts\"",
+        "lint:fix": "eslint ./src/**/*.ts\" --fix",
         "dev": "tsx watch src/server.ts"
     },
     "repository": {
