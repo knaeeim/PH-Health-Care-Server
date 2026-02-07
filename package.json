@@ -1,0 +1,26 @@
+{
+    "name": "ph-health-care-server",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/knaeeim/PH-Health-Care-Server.git"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "type": "commonjs",
+    "bugs": {
+        "url": "https://github.com/knaeeim/PH-Health-Care-Server/issues"
+    },
+    "homepage": "https://github.com/knaeeim/PH-Health-Care-Server#readme",
+    "devDependencies": {
+        "@types/express": "^5.0.6",
+        "@types/node": "^25.2.1",
+        "typescript": "^5.9.3"
+    }
+}
