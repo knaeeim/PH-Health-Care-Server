@@ -9,7 +9,12 @@
         "build": "tsc",
         "lint": "eslint \"src/**/*.ts\"",
         "lint:fix": "eslint ./src/**/*.ts\" --fix",
-        "dev": "tsx watch src/server.ts"
+        "dev": "tsx watch src/server.ts",
+        "migrate": "prisma migrate dev",
+        "generate": "prisma generate",
+        "push": "prisma db push",
+        "studio": "prisma studio",
+        "pull": "prisma db pull"
     },
     "repository": {
         "type": "git",

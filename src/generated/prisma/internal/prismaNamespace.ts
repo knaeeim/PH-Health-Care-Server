@@ -521,6 +521,7 @@ export const SpecialtyScalarFieldEnum = {
   id: 'id',
   title: 'title',
   description: 'description',
+  icon: 'icon',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
   isDeleted: 'isDeleted',
