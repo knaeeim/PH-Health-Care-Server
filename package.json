@@ -18,7 +18,7 @@
     "keywords": [],
     "author": "",
     "license": "ISC",
-    "type": "commonjs",
+    "type": "module",
     "bugs": {
         "url": "https://github.com/knaeeim/PH-Health-Care-Server/issues"
     },
@@ -26,14 +26,19 @@
     "devDependencies": {
         "@eslint/js": "^9.20.0",
         "@types/express": "^5.0.6",
-        "@types/node": "^25.2.1",
+        "@types/node": "^25.2.2",
+        "@types/pg": "^8.16.0",
         "eslint": "^9.20.0",
+        "prisma": "^7.3.0",
         "typescript": "^5.9.3",
         "typescript-eslint": "^8.24.0"
     },
     "dependencies": {
+        "@prisma/adapter-pg": "^7.3.0",
+        "@prisma/client": "^7.3.0",
         "dotenv": "^17.2.4",
         "express": "^5.2.1",
+        "pg": "^8.18.0",
         "tsx": "^4.21.0"
     }
 }
