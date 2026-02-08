@@ -1,47 +1,27 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Request, Response } from "express";
 import { specialtyServices } from "./specialty.service";
+import { catchAsync } from "../../shared/catchAsync";
 
-const createSpecialty = async (req: Request, res: Response) => {
-    try {
-        const payload = req.body;
+const createSpecialty = catchAsync(async (req: Request, res: Response) => {
+    console.log("Inside Real Controller!!");
+    const payload = req.body;
+    const specialty = await specialtyServices.createSpecialty(payload);
+    res.status(201).json({
+        success: true,
+        message: "Specialty created successfully",
+        data: specialty
+    });
+})
 
-        const specialty = await specialtyServices.createSpecialty(payload);
-
-        res.status(201).json({
-            success: true,
-            message: "Specialty created successfully",
-            data: specialty
-        })
-
-    } catch (error: any) {
-        console.log(error);
-        return res.status(500).json({
-            success: false,
-            message: "An unexpected error occurred.",
-            error: error.message
-        });
-    }
-}
-
-const getAllSpecialties = async (req: Request, res: Response) => {
-    try {
-        const specialties = await specialtyServices.getAllSpecialties();
-
-        res.status(200).json({
-            success: true,
-            message: "Specialties retrieved successfully",
-            data: specialties
-        })
-    } catch (error: any) {
-        console.log(error);
-        return res.status(500).json({
-            success: false,
-            message: "An unexpected error occurred.",
-            error: error.message
-        });
-    }
-}
+const getAllSpecialties = catchAsync(async (req: Request, res: Response) => {
+    const specialties = await specialtyServices.getAllSpecialties();
+    res.status(200).json({
+        success: true,
+        message: "Specialties retrieved successfully",
+        data: specialties
+    })
+})
 
 const deleteSpecialty = async (req: Request, res: Response) => {
     try {
