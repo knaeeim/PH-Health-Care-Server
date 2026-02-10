@@ -1,5 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { UserStatus } from "../../../generated/prisma/enums";
 import { auth } from "../../lib/auth";
+import { prisma } from "../../lib/prisma";
 
 interface IRegisterPatient {
     name: string;
@@ -24,8 +26,26 @@ const registerPatient = async (payload: IRegisterPatient) => {
     }
 
     // TODO : Create Patient Profile Using transaction (create user and profile in a transaction)
+    try {
+        const patient = await prisma.$transaction(async (tx) => {
+            return await tx.patient.create({
+                data: {
+                    userId: data.user.id,
+                    name: payload.name,
+                    email: payload.email,
+                }
+            })
+        })
 
-    return data;
+        return { ...data, patient };
+    } catch (error: any) {
+        await prisma.user.delete({
+            where: {
+                id: data.user.id
+            }
+        })
+        throw new Error("Failed to create patient profile", error);
+    }
 }
 
 interface ILoginUser {
@@ -42,11 +62,11 @@ const loginUser = async (payload: ILoginUser) => {
         }
     })
 
-    if(data.user.status === UserStatus.BLOCKED){
+    if (data.user.status === UserStatus.BLOCKED) {
         throw new Error("Your account is blocked. Please contact support.");
     }
 
-    if(data.user.isDeleted === true){
+    if (data.user.isDeleted === true) {
         throw new Error("Your account is deleted. Please contact support.");
     }
 
