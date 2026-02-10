@@ -1,3 +1,4 @@
+import { UserStatus } from "../../../generated/prisma/enums";
 import { auth } from "../../lib/auth";
 
 interface IRegisterPatient {
@@ -40,6 +41,15 @@ const loginUser = async (payload: ILoginUser) => {
             password
         }
     })
+
+    if(data.user.status === UserStatus.BLOCKED){
+        throw new Error("Your account is blocked. Please contact support.");
+    }
+
+    if(data.user.isDeleted === true){
+        throw new Error("Your account is deleted. Please contact support.");
+    }
+
     return data;
 }
 
