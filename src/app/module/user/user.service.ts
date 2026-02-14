@@ -20,7 +20,7 @@ const createDoctor = async (payload: ICreateDoctorPayLoad) => {
         specialties.push(specialty);
     }
 
-    const userExists = await prisma.doctor.findUnique({
+    const userExists = await prisma.user.findUnique({
         where: {
             email: payload.doctor.email
         }
@@ -109,12 +109,14 @@ const createDoctor = async (payload: ICreateDoctorPayLoad) => {
         return result;
     } catch (error) {
         console.log("Transaction Error ", error);
-
-        await prisma.doctor.delete({
-            where: {
-                id: userData.user.id
-            }
-        })
+        if (userData?.user?.id) {
+            await prisma.user.delete({
+                where: {
+                    id: userData.user.id
+                }
+            }).catch(err => console.log("Critical : Failed to cleanup User!", err));
+        }
+        throw new Error("Failed to create doctor");
     }
 }
 

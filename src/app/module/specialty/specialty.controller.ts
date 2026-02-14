@@ -5,7 +5,6 @@ import { catchAsync } from "../../shared/catchAsync";
 import { sendResponse } from "../../shared/sendResponse";
 
 const createSpecialty = catchAsync(async (req: Request, res: Response) => {
-    console.log("Inside Real Controller!!");
     const payload = req.body;
     const specialty = await specialtyServices.createSpecialty(payload);
     sendResponse(res, {
