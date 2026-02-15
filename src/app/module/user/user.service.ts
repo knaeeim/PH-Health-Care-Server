@@ -1,4 +1,6 @@
+import status from "http-status";
 import { Role, Specialty } from "../../../generated/prisma/client";
+import AppError from "../../errorHelper/AppError";
 import { auth } from "../../lib/auth";
 import { prisma } from "../../lib/prisma";
 import { ICreateDoctorPayLoad } from "./user.interface";
@@ -14,7 +16,7 @@ const createDoctor = async (payload: ICreateDoctorPayLoad) => {
         })
 
         if (!specialty) {
-            throw new Error(`Specialty with id ${specialtyId} not found`);
+            throw new AppError(status.BAD_REQUEST, `Specialty with id ${specialtyId} not found`);
         }
 
         specialties.push(specialty);
@@ -27,7 +29,7 @@ const createDoctor = async (payload: ICreateDoctorPayLoad) => {
     })
 
     if (userExists) {
-        throw new Error("Doctor already exists");
+        throw new AppError(status.CONFLICT, "Doctor already exists");
     }
 
     const userData = await auth.api.signUpEmail({
@@ -116,7 +118,7 @@ const createDoctor = async (payload: ICreateDoctorPayLoad) => {
                 }
             }).catch(err => console.log("Critical : Failed to cleanup User!", err));
         }
-        throw new Error("Failed to create doctor");
+        throw new AppError(status.INTERNAL_SERVER_ERROR, error instanceof Error ? error.message : "Failed to create doctor");
     }
 }
 
