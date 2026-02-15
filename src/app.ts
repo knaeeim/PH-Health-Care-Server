@@ -3,6 +3,7 @@ import { indexRouter } from "./app/routes";
 import { globalErrorHandler } from "./middleware/globalErrorHandler";
 import { notFound } from "./middleware/notFound";
 import AppError from "./app/errorHelper/AppError";
+import cookieParser from "cookie-parser";
 
 // Enable URL-encoded form data parsing
 const app: Application = express();
@@ -11,6 +12,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Middleware to parse JSON bodies
 app.use(express.json());
+app.use(cookieParser());
 
 // Index routes (where all the module routes are registered)
 app.use("/api/v1", indexRouter);

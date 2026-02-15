@@ -39,7 +39,6 @@ const registerPatient = async (payload: IRegisterPatient) => {
                 }
             })
         })
-
         const accessToken = tokenUtils.getAccessToken({
             userId: data.user.id,
             email: data.user.email,
