@@ -20,7 +20,6 @@ const getAllSpecialties = async (): Promise<Specialty[]> => {
         })
         return specialties;
     } catch (error: any) {
-        // throw new Error(error.message);
         throw new AppError(status.INTERNAL_SERVER_ERROR, error.message || "Failed to fetch specialties");
     }
 }
