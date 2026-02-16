@@ -1,9 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import status from "http-status";
 import { Role, Specialty } from "../../../generated/prisma/client";
 import AppError from "../../errorHelper/AppError";
 import { auth } from "../../lib/auth";
 import { prisma } from "../../lib/prisma";
-import { ICreateDoctorPayLoad } from "./user.interface";
+import { ICreateAdminPayload, ICreateDoctorPayLoad } from "./user.interface";
 
 const createDoctor = async (payload: ICreateDoctorPayLoad) => {
     const specialties: Specialty[] = [];
@@ -123,6 +124,39 @@ const createDoctor = async (payload: ICreateDoctorPayLoad) => {
 }
 
 
+const createAdmin = async (payload: ICreateAdminPayload) => {
+    try {
+        const { password, admin } = payload;
+
+        const userExists = await prisma.user.findUnique({
+            where: {
+                id: admin.email
+            }
+        })
+
+        if (userExists) {
+            throw new AppError(status.CONFLICT, "Admin already exists");
+        }
+
+        const user = await auth.api.signUpEmail({
+            body: {
+                email: admin.email,
+                password: password,
+                name: admin.name,
+                role: Role.ADMIN,
+                needPasswordChange: true
+            }
+        })
+
+        return user.user;
+
+    } catch (error: any) {
+        throw new AppError(status.INTERNAL_SERVER_ERROR, error.message || "Failed to create admin");
+    }
+}
+
+
 export const userService = {
-    createDoctor
+    createDoctor,
+    createAdmin
 }
