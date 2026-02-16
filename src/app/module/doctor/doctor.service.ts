@@ -8,6 +8,9 @@ import { Specialty } from "../../../generated/prisma/client";
 const getAllDoctors = async () => {
     try {
         const doctors = await prisma.doctor.findMany({
+            where: {
+                isDeleted: false
+            },
             include: {
                 user: true,
                 specialties: {
@@ -29,6 +32,9 @@ const getDoctorById = async (id: string) => {
         const doctor = await prisma.doctor.findUnique({
             where: {
                 id
+            },
+            include: {
+                user: true
             }
         })
         return doctor;
@@ -119,9 +125,42 @@ const updateDoctor = async (id: string, payload: IDoctorUpdatePayload) => {
     }
 }
 
+const deleteDoctor = async (id: string) => {
+    try {
+        const doctorExists = await prisma.doctor.findUnique({
+            where: {
+                id
+            }
+        })
+        if (!doctorExists) {
+            throw new AppError(status.NOT_FOUND, "Doctor not found");
+        }
+        if (doctorExists.isDeleted) {
+            throw new AppError(status.BAD_REQUEST, "Doctor already deleted");
+        }
+        const deletedDoctor = await prisma.doctor.update({
+            where: {
+                id
+            },
+            data: {
+                isDeleted: true,
+                user: {
+                    update: {
+                        isDeleted: true
+                    }
+                }
+            }
+        })
+        return deletedDoctor;
+    } catch (error: any) {
+        throw new AppError(status.INTERNAL_SERVER_ERROR, error.message || "Failed to delete doctor");
+    }
+}
+
 
 export const doctorServices = {
     getAllDoctors,
     getDoctorById,
-    updateDoctor
+    updateDoctor,
+    deleteDoctor
 }
