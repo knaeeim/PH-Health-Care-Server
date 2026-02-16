@@ -19,6 +19,12 @@ export interface ICreateDoctorPayLoad {
 }
 
 */
+
+export interface IUpdateDoctorSpecialtiesPayload {
+    specialtyId: string;
+    shouldDelete?: boolean;
+}
+
 export interface IDoctorUpdatePayload {
     doctor: {
         name?: string;
@@ -29,6 +35,6 @@ export interface IDoctorUpdatePayload {
         qualifications?: string;
         currentWorkingPlace?: string;
         designation?: string;
-    }, 
-    specialties?: string[];
+    },
+    specialties?: IUpdateDoctorSpecialtiesPayload[];
 }

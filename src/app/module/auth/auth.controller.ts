@@ -19,7 +19,7 @@ const registerPatient = catchAsync(async (req: Request, res: Response) => {
         httpStatusCode: status.CREATED,
         success: true,
         message: "Patient registered successfully",
-        data : {
+        data: {
             accessToken,
             refreshToken,
             token,
@@ -51,8 +51,24 @@ const loginUser = catchAsync(async (req: Request, res: Response) => {
     })
 })
 
+const getMe = catchAsync(
+    async (req: Request, res: Response) => {
+        const user = req.user;
+        const userData = await authService.getMe(user);
+
+        sendResponse(res, {
+            httpStatusCode: status.OK,
+            success: true,
+            message: "User data fetched successfully",
+            data: userData
+        })
+
+    }
+)
+
 
 export const authController = {
     registerPatient,
-    loginUser
+    loginUser,
+    getMe
 }

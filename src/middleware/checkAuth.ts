@@ -62,6 +62,12 @@ export const checkAuth = (...authRoles: Role[]) => {
                     if (authRoles.length > 0 && !authRoles.includes(user.role as Role)) {
                         throw new Error("Forbidden: You don't have permission to access this resource");
                     }
+
+                    req.user = {
+                        userId: user.id,
+                        role: user.role as Role,
+                        email: user.email
+                    }
                 }
             }
 
