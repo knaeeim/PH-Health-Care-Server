@@ -34,7 +34,6 @@ const updateDoctor = catchAsync(
         const { id } = req.params;
         const payload = req.body;
         const doctor = await doctorServices.updateDoctor(id as string, payload);
-        console.log(doctor);
         sendResponse(res, {
             httpStatusCode: status.OK,
             success: true,
