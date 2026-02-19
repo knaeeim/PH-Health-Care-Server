@@ -8,5 +8,6 @@ const router = Router();
 router.post("/register-patient", authController.registerPatient);
 router.post("/login", authController.loginUser);
 router.get("/me", checkAuth(Role.ADMIN, Role.DOCTOR, Role.PATIENT, Role.SUPER_ADMIN), authController.getMe);
+router.post("/refresh-token", authController.getNewToken);
 
 export const authRouter = router;
