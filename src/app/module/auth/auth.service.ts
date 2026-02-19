@@ -231,7 +231,31 @@ const changePassword = async (payload: IChangePasswordPayload, sessionToken: str
             })
         })
 
-        return result;
+        const accessToken = tokenUtils.getAccessToken({
+            userId: session.user.id,
+            email: session.user.email,
+            role: session.user.role,
+            name: session.user.name,
+            status: session.user.status,
+            isDeleted: session.user.isDeleted,
+            emailVerified: session.user.emailVerified
+        })
+
+        const refreshToken = tokenUtils.getRefreshToken({
+            userId: session.user.id,
+            email: session.user.email,
+            role: session.user.role,
+            name: session.user.name,
+            status: session.user.status,
+            isDeleted: session.user.isDeleted,
+            emailVerified: session.user.emailVerified
+        })
+
+        return {
+            accessToken,
+            refreshToken,
+            ...result
+        };
 
     } catch (error: any) {
         throw new AppError(status.INTERNAL_SERVER_ERROR, error.message || "Failed to change password");

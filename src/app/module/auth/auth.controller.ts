@@ -111,6 +111,12 @@ const changePassword = catchAsync(
 
         const result = await authService.changePassword(payload as IChangePasswordPayload, sessionToken);
 
+        const { accessToken, refreshToken, token } = result;
+        // Token need to refresh again because after changing password we are revking all other session except the current session, we need to set the new token in cookie after changing password otherwise when we will change the password again then token will show invalid token and you will not able to change the password. 
+        tokenUtils.setAccessTokenCookie(res, accessToken);
+        tokenUtils.setRefreshTokenCookie(res, refreshToken);
+        tokenUtils.setBetterAuthSessionCookie(res, token as string);
+
         sendResponse(res, {
             httpStatusCode: status.OK,
             success: true,
