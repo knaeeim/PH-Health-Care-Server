@@ -5,6 +5,7 @@ import { sendResponse } from "../../shared/sendResponse";
 import status from "http-status";
 import { tokenUtils } from "../../utils/token";
 import AppError from "../../errorHelper/AppError";
+import { IChangePasswordPayload } from "./auth.interface";
 
 const registerPatient = catchAsync(async (req: Request, res: Response) => {
     const payload = req.body;
@@ -71,7 +72,7 @@ const getNewToken = catchAsync(
     async (req: Request, res: Response) => {
         const refreshToken = req.cookies.refreshToken;
         const betterAuthSessionToken = req.cookies['better_auth.session_token'];
-        
+
         if (!refreshToken) {
             throw new AppError(status.UNAUTHORIZED, "Refresh Token is missing");
         }
@@ -99,9 +100,31 @@ const getNewToken = catchAsync(
 )
 
 
+const changePassword = catchAsync(
+    async (req: Request, res: Response) => {
+        const payload: IChangePasswordPayload = req.body;
+        const sessionToken = req.cookies['better_auth.session_token'];
+
+        if (!sessionToken) {
+            throw new AppError(status.UNAUTHORIZED, "Session token is missing");
+        }
+
+        const result = await authService.changePassword(payload as IChangePasswordPayload, sessionToken);
+
+        sendResponse(res, {
+            httpStatusCode: status.OK,
+            success: true,
+            message: "Password changed successfully",
+            data: result
+        })
+    }
+)
+
+
 export const authController = {
     registerPatient,
     loginUser,
     getMe,
-    getNewToken
+    getNewToken,
+    changePassword
 }

@@ -9,12 +9,7 @@ import { IRequestUser } from "../../interfaces/requestUser.interface";
 import { JwtUtils } from "../../utils/jwt";
 import { envVars } from "../../config/env";
 import { JwtPayload } from "jsonwebtoken";
-
-interface IRegisterPatient {
-    name: string;
-    email: string;
-    password: string
-}
+import { IChangePasswordPayload, ILoginUser, IRegisterPatient } from "./auth.interface";
 
 const registerPatient = async (payload: IRegisterPatient) => {
     const { name, email, password } = payload;
@@ -72,11 +67,6 @@ const registerPatient = async (payload: IRegisterPatient) => {
         })
         throw new AppError(status.INTERNAL_SERVER_ERROR, error.message || "Registration failed");
     }
-}
-
-interface ILoginUser {
-    email: string;
-    password: string;
 }
 
 const loginUser = async (payload: ILoginUser) => {
@@ -215,9 +205,43 @@ const getNewToken = async (refreshToken: string, sessionToken: string) => {
     }
 }
 
+const changePassword = async (payload: IChangePasswordPayload, sessionToken: string) => {
+    try {
+        const session = await auth.api.getSession({
+            headers: new Headers({
+                Authorization: `Bearer ${sessionToken}`
+            })
+        })
+
+        if (!session) {
+            throw new AppError(status.UNAUTHORIZED, "Invalid session token");
+        }
+
+        const { currentPassword, newPassword } = payload;
+
+        const result = await auth.api.changePassword({
+            body: {
+                currentPassword,
+                newPassword,
+                // revoke other session will ensure that all other sessions will be logged out except the current session
+                revokeOtherSessions: true
+            },
+            headers: new Headers({
+                Authorization: `Bearer ${sessionToken}`
+            })
+        })
+
+        return result;
+
+    } catch (error: any) {
+        throw new AppError(status.INTERNAL_SERVER_ERROR, error.message || "Failed to change password");
+    }
+}
+
 export const authService = {
     registerPatient,
     loginUser,
     getMe,
-    getNewToken
+    getNewToken,
+    changePassword
 }
