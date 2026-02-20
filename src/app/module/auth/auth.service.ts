@@ -9,7 +9,7 @@ import { IRequestUser } from "../../interfaces/requestUser.interface";
 import { JwtUtils } from "../../utils/jwt";
 import { envVars } from "../../config/env";
 import { JwtPayload } from "jsonwebtoken";
-import { IChangePasswordPayload, ILoginUser, IRegisterPatient } from "./auth.interface";
+import { IChangePasswordPayload, ILoginUser, IRegisterPatient, ISessionInterface } from "./auth.interface";
 
 const registerPatient = async (payload: IRegisterPatient) => {
     const { name, email, password } = payload;
@@ -363,6 +363,15 @@ const resetPassword = async (email: string, otp: string, newPassword: string) =>
             }
         })
 
+        if (isUserExists.needPasswordChange) {
+            await prisma.user.update({
+                where: { id: isUserExists.id },
+                data: {
+                    needPasswordChange: false
+                }
+            })
+        }
+
         await prisma.session.deleteMany({
             where: {
                 userId: isUserExists.id
@@ -370,6 +379,46 @@ const resetPassword = async (email: string, otp: string, newPassword: string) =>
         })
     } catch (error: any) {
         throw new AppError(status.INTERNAL_SERVER_ERROR, error.message || "Failed to reset password");
+    }
+}
+
+const googleLoginSuccess = async (session: ISessionInterface) => {
+    try {
+        const isPatientExists = await prisma.patient.findUnique({
+            where: {
+                email: session?.user.email
+            }
+        })
+
+        if (!isPatientExists) {
+            await prisma.patient.create({
+                data: {
+                    userId: session.user.id,
+                    name: session.user.name,
+                    email: session.user.email,
+                }
+            })
+        }
+
+        const accessToken = tokenUtils.getAccessToken({
+            userId: session.user.id,
+            role: session.user.role,
+            name: session.user.name,
+        })
+
+        const refreshToken = tokenUtils.getRefreshToken({
+            userId: session.user.id,
+            role: session.user.role,
+            name: session.user.name,
+        })
+
+        return {
+            accessToken,
+            refreshToken
+        }
+
+    } catch (error: any) {
+        throw new AppError(status.INTERNAL_SERVER_ERROR, error.message || "Failed to login with Google");
     }
 }
 
@@ -382,5 +431,6 @@ export const authService = {
     logoutUser,
     verifyEmail,
     forgetPassword,
-    resetPassword
+    resetPassword,
+    googleLoginSuccess
 }
