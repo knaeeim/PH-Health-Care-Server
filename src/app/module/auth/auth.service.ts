@@ -300,6 +300,33 @@ const verifyEmail = async (email: string, otp: string) => {
     }
 }
 
+const forgetPassword = async (email: string) => {
+    try {
+        const isUserExists = await prisma.user.findUnique({
+            where: { email }
+        })
+        if (!isUserExists) {
+            throw new AppError(status.NOT_FOUND, "User with this email not found");
+        }
+
+        if (!isUserExists.emailVerified) {
+            throw new AppError(status.BAD_REQUEST, "Email is not verified. Please verify your email first.");
+        }
+
+        if (isUserExists.isDeleted || isUserExists.status === UserStatus.DELETED) {
+            throw new AppError(status.BAD_REQUEST, "User account is deleted. Please contact support.");
+        }
+
+        await auth.api.requestPasswordResetEmailOTP({
+            body: {
+                email
+            }
+        })
+    } catch (error: any) {
+        throw new AppError(status.INTERNAL_SERVER_ERROR, error.message || "Failed to reset password");
+    }
+}
+
 export const authService = {
     registerPatient,
     loginUser,
@@ -307,5 +334,6 @@ export const authService = {
     getNewToken,
     changePassword,
     logoutUser,
-    verifyEmail
+    verifyEmail,
+    forgetPassword
 }
