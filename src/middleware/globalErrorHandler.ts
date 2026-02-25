@@ -7,11 +7,17 @@ import { TErrorResponse, TErrorSources } from "../app/interfaces/error.interface
 import z from "zod";
 import { handleZodError } from "../app/errorHelper/handleZodError";
 import AppError from "../app/errorHelper/AppError";
+import { deleteFromCloudinary } from "../app/config/cloudinary.config";
 
-export const globalErrorHandler = (err: any, req: Request, res: Response, next: NextFunction) => {
+export const globalErrorHandler = async (err: any, req: Request, res: Response, next: NextFunction) => {
 
     if (envVars.NODE_ENV === "development") {
         console.error("Error: ", err);
+    }
+
+    // If user uploads any file then delete that file from cloudinary if any error occurs
+    if (req.file) {
+        await deleteFromCloudinary(req.file.path);
     }
 
     let statusCode: number = status.INTERNAL_SERVER_ERROR;
