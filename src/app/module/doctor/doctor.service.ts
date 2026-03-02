@@ -3,24 +3,57 @@ import status from "http-status";
 import AppError from "../../errorHelper/AppError";
 import { prisma } from "../../lib/prisma";
 import { IDoctorUpdatePayload } from "./doctor.interface";
-import { UserStatus } from "../../../generated/prisma/client";
+import { Doctor, Prisma, UserStatus } from "../../../generated/prisma/client";
+import { QueryBuilder } from "../../utils/QueryBuilder";
+import { IQueryParams } from "../../interfaces/query.interface";
+import { doctorFilterableFields, doctorIncludeConfig, doctorSearchableFields } from "./doctor.constant";
 
-const getAllDoctors = async () => {
+const getAllDoctors = async (query: IQueryParams) => {
     try {
-        const doctors = await prisma.doctor.findMany({
-            where: {
-                isDeleted: false
-            },
-            include: {
-                user: true,
-                specialties: {
-                    include: {
-                        specialty: true
-                    }
-                }
+        // const doctors = await prisma.doctor.findMany({
+        //     where: {
+        //         isDeleted: false
+        //     },
+        //     include: {
+        //         user: true,
+        //         specialties: {
+        //             include: {
+        //                 specialty: true
+        //             }
+        //         }
+        //     }
+        // });
+        // return doctors;
+
+        const queryBuilder = new QueryBuilder<Doctor, Prisma.DoctorWhereInput, Prisma.DoctorInclude>(prisma.doctor, query,
+            {
+                searchableFields: doctorSearchableFields,
+                filterableFields: doctorFilterableFields
             }
-        });
-        return doctors;
+        )
+
+        const result = await queryBuilder
+            .search()
+            .filter()
+            .where({
+                isDeleted: false,
+            })
+            .include({
+                user: true,
+                specialties: true,
+                // specialties : {
+                //     include : {
+                //         specialty : true
+                //     }
+                // }
+            })
+            .dynamicInclude(doctorIncludeConfig)
+            .paginate()
+            .sort()
+            .fields()
+            .execute();
+
+        return result;
     } catch (error: any) {
         console.log(error instanceof Error ? error : "Unknown error");
         throw new AppError(status.INTERNAL_SERVER_ERROR, error.message || "Failed to fetch doctors");
