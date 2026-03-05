@@ -9,12 +9,12 @@ export class QueryBuilder<T, TWhereInput = Record<string, unknown>, TInclude = R
     private skip: number = 0;
     private sortBy: string = "createdAt";
     private sortOrder: "asc" | "desc" = "desc"
-    private selectFields: Record<string, boolean | undefined> = {};
+    private selectFields: Record<string, boolean> | undefined;
 
     constructor(
         private model: PrismaModelDelegate,
         private queryParams: IQueryParams,
-        private config: IQueryConfig
+        private config: IQueryConfig = {}
     ) {
 
         this.query = {
@@ -32,10 +32,12 @@ export class QueryBuilder<T, TWhereInput = Record<string, unknown>, TInclude = R
     }
 
     search(): this {
-        const { searchTerms } = this.queryParams;
+        const { searchTerm } = this.queryParams;
         const { searchableFields } = this.config;
 
-        if (searchTerms && searchableFields && searchableFields.length > 0) {
+        // console.log("searchTerms:", searchTerm);
+
+        if (searchTerm && searchableFields && searchableFields.length > 0) {
             const searchConditions: Record<string, unknown>[] = searchableFields.map(field => {
                 // nested relation search (e.g., author.name or post.author.name)
                 if (field.includes(".")) {
@@ -45,7 +47,7 @@ export class QueryBuilder<T, TWhereInput = Record<string, unknown>, TInclude = R
                         const [relation, relatedField] = parts;
 
                         const stringFilter: PrismaStringFilter = {
-                            contains: searchTerms,
+                            contains: searchTerm,
                             mode: "insensitive" as const,
                         }
 
@@ -58,14 +60,16 @@ export class QueryBuilder<T, TWhereInput = Record<string, unknown>, TInclude = R
                         const [relation, nestedRelation, relatedField] = parts;
 
                         const stringFilter: PrismaStringFilter = {
-                            contains: searchTerms,
+                            contains: searchTerm,
                             mode: "insensitive" as const,
                         }
 
                         return {
                             [relation]: {
-                                [nestedRelation]: {
-                                    [relatedField]: stringFilter
+                                some: {
+                                    [nestedRelation]: {
+                                        [relatedField]: stringFilter
+                                    }
                                 }
                             }
                         }
@@ -74,7 +78,7 @@ export class QueryBuilder<T, TWhereInput = Record<string, unknown>, TInclude = R
                 }
                 // Direct field search
                 const stringFilter: PrismaStringFilter = {
-                    contains: searchTerms,
+                    contains: searchTerm,
                     mode: "insensitive" as const,
                 }
 
@@ -86,6 +90,10 @@ export class QueryBuilder<T, TWhereInput = Record<string, unknown>, TInclude = R
             const whereConsitions = this.query.where as PrimsaWhereConditions;
 
             whereConsitions.OR = searchConditions;
+
+            const countWhereConditions = this.countQuery.where as PrimsaWhereConditions;
+
+            countWhereConditions.OR = searchConditions;
         }
 
         return this;
@@ -95,7 +103,7 @@ export class QueryBuilder<T, TWhereInput = Record<string, unknown>, TInclude = R
 
         const { filterableFields } = this.config;
 
-        const excludedFields = ["searchTerms", "page", "limit", "sortBy", "sortOrder", "fields", "includes"];
+        const excludedFields = ["searchTerm", "page", "limit", "sortBy", "sortOrder", "fields", "include"];
 
         const filterParams: Record<string, unknown> = {};
 
@@ -117,10 +125,6 @@ export class QueryBuilder<T, TWhereInput = Record<string, unknown>, TInclude = R
 
             const isAllowedFields = !filterableFields || filterableFields.length === 0 || filterableFields.includes(key);
 
-            if (!isAllowedFields) {
-                return;
-            }
-
             if (key.includes(".")) {
                 const parts = key.split(".");
 
@@ -139,8 +143,8 @@ export class QueryBuilder<T, TWhereInput = Record<string, unknown>, TInclude = R
                     const queryRelation = queryWhere[relation] as Record<string, unknown>;
                     const countQueryRelation = countQueryWhere[relation] as Record<string, unknown>;
 
-                    queryRelation[relationField] = value;
-                    countQueryRelation[relationField] = value;
+                    queryRelation[relationField] = this.parseFilterValue(value);
+                    countQueryRelation[relationField] = this.parseFilterValue(value);
                     return;
                 }
                 else if (parts.length === 3) {
@@ -180,13 +184,13 @@ export class QueryBuilder<T, TWhereInput = Record<string, unknown>, TInclude = R
                     const queryNestedRelation = querySome[nestedRelation] as Record<string, unknown>;
                     const countQueryNestedRelation = countQuerySome[nestedRelation] as Record<string, unknown>;
 
-                    queryNestedRelation[relationField] = value;
-                    countQueryNestedRelation[relationField] = value;
+                    queryNestedRelation[relationField] = this.parseFilterValue(value);
+                    countQueryNestedRelation[relationField] = this.parseFilterValue(value);
                     return;
                 }
-            } else {
-                queryWhere[key] = this.parseFilterValue(value);
-                countQueryWhere[key] = this.parseFilterValue(value);
+            }
+
+            if (!isAllowedFields) {
                 return;
             }
 
@@ -307,7 +311,7 @@ export class QueryBuilder<T, TWhereInput = Record<string, unknown>, TInclude = R
             }
         })
 
-        const includeParams = this.queryParams.includes as string | undefined;
+        const includeParams = this.queryParams.include as string | undefined;
 
         if (includeParams && typeof includeParams === "string") {
             const requestedRelations = includeParams.split(",").map((relations) => relations.trim());
@@ -371,6 +375,9 @@ export class QueryBuilder<T, TWhereInput = Record<string, unknown>, TInclude = R
                 else {
                     result[key] = source[key];
                 }
+            }
+            else {
+                result[key] = source[key];
             }
         }
 

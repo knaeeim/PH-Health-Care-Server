@@ -13,7 +13,7 @@ router.post("/create-specialty",
     multerConfig.single("file"),
     validateRequest(specialtyValidation.createSpecialtyZodSchema),
     specialtyController.createSpecialty);
-router.get("/all-specialties", checkAuth(Role.PATIENT), specialtyController.getAllSpecialties);
+router.get("/all-specialties", checkAuth(Role.PATIENT, Role.SUPER_ADMIN, Role.ADMIN), specialtyController.getAllSpecialties);
 router.delete("/delete/:id", specialtyController.deleteSpecialty);
 router.put("/update/:id", specialtyController.updateSpecialty);
 
