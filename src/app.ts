@@ -8,9 +8,11 @@ import { auth } from "./app/lib/auth";
 import path from "path";
 import cors from "cors";
 import { envVars } from "./app/config/env";
+import qs from "qs";
 
 // Enable URL-encoded form data parsing
 const app: Application = express();
+app.set("query parser", (str: string) => qs.parse(str));
 
 app.use(cors({
     origin: [envVars.FRONTEND_URL, envVars.BETTER_AUTH_URL],

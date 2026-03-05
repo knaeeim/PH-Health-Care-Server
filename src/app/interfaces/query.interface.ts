@@ -60,7 +60,7 @@ export interface PrismaStringFilter {
     [key: string]: unknown;
 }
 
-export interface PrimsaWhereConditions {
+export interface PrismaWhereConditions {
     OR?: Record<string, unknown>[];
     AND?: Record<string, unknown>[];
     NOT?: Record<string, unknown>[];

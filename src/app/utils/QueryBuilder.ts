@@ -1,4 +1,4 @@
-import { IQueryConfig, IQueryParams, IQueryResult, PrimsaWhereConditions, PrismaCountArgs, PrismaFindManyArgs, PrismaModelDelegate, PrismaNumberFilter, PrismaStringFilter } from "../interfaces/query.interface"
+import { IQueryConfig, IQueryParams, IQueryResult, PrismaCountArgs, PrismaFindManyArgs, PrismaModelDelegate, PrismaNumberFilter, PrismaStringFilter, PrismaWhereConditions } from "../interfaces/query.interface"
 
 
 export class QueryBuilder<T, TWhereInput = Record<string, unknown>, TInclude = Record<string, unknown>> {
@@ -87,11 +87,11 @@ export class QueryBuilder<T, TWhereInput = Record<string, unknown>, TInclude = R
                 }
             })
 
-            const whereConsitions = this.query.where as PrimsaWhereConditions;
+            const whereConsitions = this.query.where as PrismaWhereConditions;
 
             whereConsitions.OR = searchConditions;
 
-            const countWhereConditions = this.countQuery.where as PrimsaWhereConditions;
+            const countWhereConditions = this.countQuery.where as PrismaWhereConditions;
 
             countWhereConditions.OR = searchConditions;
         }

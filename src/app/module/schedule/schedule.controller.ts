@@ -4,6 +4,7 @@ import { scheduleServices } from "./schedule.service";
 import { sendResponse } from "../../shared/sendResponse";
 import status from "http-status";
 import { ICreateSchedulePayload } from "./schedule.interface";
+import { IQueryParams } from "../../interfaces/query.interface";
 
 const createSchedule = catchAsync(
     async (req: Request, res: Response) => {
@@ -21,7 +22,8 @@ const createSchedule = catchAsync(
 
 const getAllSchedules = catchAsync(
     async (req: Request, res: Response) => {
-        const schedules = await scheduleServices.getAllSchedules();
+        const query = req.query;
+        const schedules = await scheduleServices.getAllSchedules(query as IQueryParams);
 
         sendResponse(res, {
             httpStatusCode: status.OK,
