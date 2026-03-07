@@ -31,6 +31,10 @@ export class QueryBuilder<T, TWhereInput = Record<string, unknown>, TInclude = R
 
     }
 
+    printConstractorValues() : void {
+        console.log(`${this.model}'s Query Params`, this.queryParams);
+    }
+
     search(): this {
         const { searchTerm } = this.queryParams;
         const { searchableFields } = this.config;
