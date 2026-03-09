@@ -203,9 +203,21 @@ const getMySingleAppointment = async (appointmentId: string, user: IRequestUser)
     return appointment;
 }
 
+const getAllAppointments = async () => {
+    const appointments = await prisma.appointment.findMany({
+        include: {
+            doctor: true,
+            patient: true,
+            schedule: true
+        }
+    });
+    return appointments;
+}
+
 export const appointmentService = {
     bookAppointment,
     getMyAppointments,
     changeAppointmentStatus,
+    getAllAppointments,
     getMySingleAppointment,
 }

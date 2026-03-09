@@ -34,11 +34,15 @@ const getMyAppointments = catchAsync(
 
 const changeAppointmentStatus = catchAsync(
     async (req: Request, res: Response) => {
+        const user = req.user;
+        const appointmentId = req.params.id;
+        const payload = req.body;
+        const result = await appointmentService.changeAppointmentStatus(appointmentId as string, payload, user)
         sendResponse(res, {
             httpStatusCode: status.OK,
             success: true,
-            message: 'My appointments retrieved successfully',
-            data: null
+            message: 'Appointment status changed successfully',
+            data: result
         })
     }
 )
@@ -46,11 +50,14 @@ const changeAppointmentStatus = catchAsync(
 
 const getMySingleAppointment = catchAsync(
     async (req: Request, res: Response) => {
+        const user = req.user;
+        const appointmentId = req.params.id;
+        const result = await appointmentService.getMySingleAppointment(appointmentId as string, user);
         sendResponse(res, {
             httpStatusCode: status.OK,
             success: true,
-            message: 'My appointments retrieved successfully',
-            data: null
+            message: 'My appointment retrieved successfully',
+            data: result
         })
     }
 )
@@ -58,11 +65,12 @@ const getMySingleAppointment = catchAsync(
 
 const getAllAppointments = catchAsync(
     async (req: Request, res: Response) => {
+        const result = await appointmentService.getAllAppointments();
         sendResponse(res, {
             httpStatusCode: status.OK,
             success: true,
-            message: 'My appointments retrieved successfully',
-            data: null
+            message: 'All appointments retrieved successfully',
+            data: result
         })
     }
 )
