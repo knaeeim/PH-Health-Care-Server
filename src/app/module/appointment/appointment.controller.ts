@@ -78,11 +78,14 @@ const getAllAppointments = catchAsync(
 
 const bookAppointmentWithPayLater = catchAsync(
     async (req: Request, res: Response) => {
+        const payload = req.body;
+        const user = req.user;
+        const result = await appointmentService.bookAppointmentWithPayLater(payload, user);
         sendResponse(res, {
-            httpStatusCode: status.OK,
+            httpStatusCode: status.CREATED,
             success: true,
-            message: 'My appointments retrieved successfully',
-            data: null
+            message: 'Appointment booked successfully with pay later option',
+            data: result
         })
     }
 )
@@ -90,11 +93,14 @@ const bookAppointmentWithPayLater = catchAsync(
 
 const initiatePayment = catchAsync(
     async (req: Request, res: Response) => {
+        const appointmentId = req.params.id;
+        const user = req.user;
+        const result = await appointmentService.initiatePayment(appointmentId as string, user);
         sendResponse(res, {
             httpStatusCode: status.OK,
             success: true,
-            message: 'My appointments retrieved successfully',
-            data: null
+            message: 'Payment initiated successfully',
+            data: result
         })
     }
 )

@@ -2,7 +2,7 @@ import { uuidv7 } from "zod";
 import { IRequestUser } from "../../interfaces/requestUser.interface"
 import { prisma } from "../../lib/prisma"
 import { IBookAppointmentPayload } from "./appointment.interface"
-import { AppointmentStatus, Role } from "../../../generated/prisma/enums";
+import { AppointmentStatus, PaymentStatus, Role } from "../../../generated/prisma/enums";
 import AppError from "../../errorHelper/AppError";
 import status from "http-status";
 import { stripe } from "../../config/stripe.config";
@@ -313,11 +313,86 @@ const bookAppointmentWithPayLater = async (payload: IBookAppointmentPayload, use
                 isBooked: true
             }
         })
-        return appointmentData;
+
+        const transactionId = String(uuidv7());
+
+        const paymentData = await tx.payment.create({
+            data: {
+                appointmentId: appointmentData.id,
+                amount: doctorData.appointmentFee,
+                transactionId
+            }
+        })
+
+        return {
+            appointmentData,
+            paymentData
+        };
     })
 
     return {
-        appointment: result
+        appointment: result.appointmentData,
+        payment: result.paymentData
+    }
+}
+
+const initiatePayment = async (appointmentId: string, user: IRequestUser) => {
+
+    const patientData = await prisma.patient.findUniqueOrThrow({
+        where: {
+            email: user.email
+        }
+    })
+
+
+    const appointmentData = await prisma.appointment.findUniqueOrThrow({
+        where: {
+            id: appointmentId,
+            patientId: patientData.id
+        },
+        include: {
+            doctor: true,
+            payment: true
+        }
+    })
+
+    if (appointmentData.payment?.status === PaymentStatus.PAID) {
+        throw new AppError(status.BAD_REQUEST, "Payment for this appointment is already completed");
+    }
+
+    if (appointmentData.status === AppointmentStatus.CANCELLED) {
+        throw new AppError(status.BAD_REQUEST, "You can not make payment for a cancelled appointment");
+    }
+
+    if (!appointmentData.payment) {
+        throw new AppError(status.BAD_REQUEST, "Payment data not found for this appointment");
+    }
+
+    const session = await stripe.checkout.sessions.create({
+        payment_method_types: ['card'],
+        mode: 'payment',
+        line_items: [
+            {
+                price_data: {
+                    currency: "bdt",
+                    product_data: {
+                        name: `Appointment with Dr. ${appointmentData.doctor.name}`
+                    },
+                    unit_amount: appointmentData.doctor.appointmentFee * 120,
+                },
+                quantity: 1
+            }
+        ],
+        metadata: {
+            appointmentId: appointmentData.id,
+            paymentId: appointmentData.payment?.id
+        },
+        success_url: `${envVars.FRONTEND_URL}/dashboard/payment/payment-success`,
+        cancel_url: `${envVars.FRONTEND_URL}/dashboard/payment/payment-failed`
+    })
+
+    return {
+        paymentUrl: session.url
     }
 }
 
@@ -327,5 +402,6 @@ export const appointmentService = {
     changeAppointmentStatus,
     getAllAppointments,
     getMySingleAppointment,
-    bookAppointmentWithPayLater
+    bookAppointmentWithPayLater,
+    initiatePayment
 }
