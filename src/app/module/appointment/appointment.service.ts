@@ -5,7 +5,10 @@ import { IBookAppointmentPayload } from "./appointment.interface"
 import { AppointmentStatus, Role } from "../../../generated/prisma/enums";
 import AppError from "../../errorHelper/AppError";
 import status from "http-status";
+import { stripe } from "../../config/stripe.config";
+import { envVars } from "../../config/env";
 
+// book appointment with paynow
 const bookAppointment = async (payload: IBookAppointmentPayload, user: IRequestUser) => {
     const patientData = await prisma.patient.findUniqueOrThrow({
         where: {
@@ -60,10 +63,54 @@ const bookAppointment = async (payload: IBookAppointmentPayload, user: IRequestU
         })
 
         // TODO: Payment integration will be here
-        return appointmentData;
+        // first need to create a transaction id 
+        const transactionId = String(uuidv7());
+
+        // creating the payment data in database
+        const paymentData = await tx.payment.create({
+            data: {
+                appointmentId: appointmentData.id,
+                amount: doctorData.appointmentFee,
+                transactionId
+            }
+        })
+
+        const session = await stripe.checkout.sessions.create({
+            payment_method_types: ['card'],
+            mode: 'payment',
+            line_items: [
+                {
+                    price_data: {
+                        currency: "bdt",
+                        product_data: {
+                            name: `Appointment with Dr. ${doctorData.name}`
+                        },
+                        unit_amount: doctorData.appointmentFee * 120
+                    },
+                    quantity: 1
+                }
+            ],
+            metadata: {
+                appointmentId: appointmentData.id,
+                paymentId: patientData.id,
+            },
+            success_url: `${envVars.FRONTEND_URL}/dashboard/payment/payment-success`,
+            // cancel_url : `${envVars.FRONTEND_URL}/dashboard/payment/payment-failed`
+            cancel_url: `${envVars.FRONTEND_URL}/dashboard/appointments`
+        })
+
+        return {
+            appointmentData,
+            paymentData,
+            paymentUrl: session.url
+        };
     })
 
-    return result;
+    return {
+        appointment: result.appointmentData,
+        payment: result.paymentData,
+        paymentUrl: result.paymentUrl
+    };
 }
 
 const getMyAppointments = async (user: IRequestUser) => {
