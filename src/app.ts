@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import express, { Application, Request, Response } from "express";
 import { indexRouter } from "./app/routes";
 import { globalErrorHandler } from "./middleware/globalErrorHandler";
@@ -10,6 +11,8 @@ import cors from "cors";
 import { envVars } from "./app/config/env";
 import qs from "qs";
 import { paymentController } from "./app/module/payment/payment.controller";
+import cron from "node-cron";
+import { appointmentService } from "./app/module/appointment/appointment.service";
 
 // Enable URL-encoded form data parsing
 const app: Application = express();
@@ -35,6 +38,15 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
+
+cron.schedule("*/25 * * * *", async () => {
+    try {
+        console.log("cron jobs is running");
+        await appointmentService.cancelUpaidAppointments();
+    } catch (error: any) {
+        console.log(`Error is ${error}`);
+    }
+})
 
 // Index routes (where all the module routes are registered)
 app.use("/api/v1", indexRouter);
