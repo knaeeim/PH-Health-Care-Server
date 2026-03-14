@@ -36,7 +36,7 @@ const createSchedule = async (payload: ICreateSchedulePayload) => {
         const endDateTime = new Date(
             addMinutes(
                 addHours(
-                    `${format(endDate, "yyyy-MM-dd")}`,
+                    `${format(currentDate, "yyyy-MM-dd")}`,
                     Number(endTime.split(":")[0])
                 ),
                 Number(endTime.split(":")[1])
@@ -75,8 +75,6 @@ const createSchedule = async (payload: ICreateSchedulePayload) => {
         }
         currentDate.setDate(currentDate.getDate() + 1);
     }
-
-    console.log("schedules Array after create schedule", schedules);
 
     return schedules;
 }

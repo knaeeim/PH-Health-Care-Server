@@ -9,10 +9,10 @@ import { sendResponse } from "../../shared/sendResponse";
 
 const handleStripeWebhookEvent = catchAsync(
     async (req: Request, res: Response) => {
-        const signeture = req.headers['stripe-signeture'] as string;
+        const signature = req.headers['stripe-signature'] as string;
         const webhookSecret = envVars.STRIPE.WEBHOOK_SECRET;
 
-        if (!signeture || !webhookSecret) {
+        if (!signature || !webhookSecret) {
             console.log("Missing Stripe Signature or Webhook Secret");
             return res.status(status.BAD_REQUEST).json({
                 message: "Missing Stripe Signature or Webhook Secret"
@@ -22,7 +22,7 @@ const handleStripeWebhookEvent = catchAsync(
         let event;
 
         try {
-            event = stripe.webhooks.constructEvent(req.body, signeture, webhookSecret);
+            event = stripe.webhooks.constructEvent(req.body, signature, webhookSecret);
         } catch (error: any) {
             console.log("Error Processing stripe webhooks", error);
             return res.status(status.BAD_REQUEST).json({

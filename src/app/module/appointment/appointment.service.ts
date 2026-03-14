@@ -1,4 +1,4 @@
-import { uuidv7 } from "zod";
+import { v7 as uuidv7 } from "uuid"
 import { IRequestUser } from "../../interfaces/requestUser.interface"
 import { prisma } from "../../lib/prisma"
 import { IBookAppointmentPayload } from "./appointment.interface"
@@ -34,7 +34,8 @@ const bookAppointment = async (payload: IBookAppointmentPayload, user: IRequestU
             doctorId_scheduleId: {
                 doctorId: doctorData.id,
                 scheduleId: scheduleData.id
-            }
+            },
+            isBooked: false
         }
     })
 
@@ -92,7 +93,7 @@ const bookAppointment = async (payload: IBookAppointmentPayload, user: IRequestU
             ],
             metadata: {
                 appointmentId: appointmentData.id,
-                paymentId: patientData.id,
+                paymentId: paymentData.id,
             },
             success_url: `${envVars.FRONTEND_URL}/dashboard/payment/payment-success`,
             // cancel_url : `${envVars.FRONTEND_URL}/dashboard/payment/payment-failed`
@@ -281,14 +282,19 @@ const bookAppointmentWithPayLater = async (payload: IBookAppointmentPayload, use
         }
     })
 
-    const doctorScheduleData = await prisma.doctorSchedule.findUniqueOrThrow({
+    const doctorScheduleData = await prisma.doctorSchedule.findUnique({
         where: {
             doctorId_scheduleId: {
                 doctorId: doctorData.id,
                 scheduleId: scheduleData.id
-            }
+            },
+            isBooked: false
         }
     })
+
+    if (!doctorScheduleData) {
+        throw new AppError(status.NOT_FOUND, "Doctor schedule not found or already booked");
+    }
 
     const videoCalligId = String(uuidv7());
 
@@ -387,8 +393,8 @@ const initiatePayment = async (appointmentId: string, user: IRequestUser) => {
             appointmentId: appointmentData.id,
             paymentId: appointmentData.payment?.id
         },
-        success_url: `${envVars.FRONTEND_URL}/dashboard/payment/payment-success`,
-        cancel_url: `${envVars.FRONTEND_URL}/dashboard/payment/payment-failed`
+        success_url: `${envVars.FRONTEND_URL}/dashboard/payment/payment-success?appointment_id=${appointmentData.id}&payment_id=${appointmentData.payment.id}`,
+        cancel_url: `${envVars.FRONTEND_URL}/dashboard/payment/payment-failed?error=payment_cancelled`
     })
 
     return {
@@ -407,6 +413,8 @@ const cancelUpaidAppointments = async () => {
             }
         }
     })
+
+    console.log("Unpaid Appointment", unPaidAppointments);
 
     const appointmentToCancel = unPaidAppointments.map(appointment => appointment.id);
 
@@ -453,6 +461,6 @@ export const appointmentService = {
     getAllAppointments,
     getMySingleAppointment,
     bookAppointmentWithPayLater,
-    initiatePayment, 
+    initiatePayment,
     cancelUpaidAppointments
 }
